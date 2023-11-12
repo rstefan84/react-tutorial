@@ -9,6 +9,10 @@ function Header() {
         Home
       </NavLink>
       {" | "}
+      <NavLink to="/mainlist" style={({isActive}) => isActive ? activeStyle : undefined}>
+        Main List
+      </NavLink>
+      {" | "}
       <NavLink to="/about" style={({isActive}) => isActive ? activeStyle : undefined}>
         About
       </NavLink>
