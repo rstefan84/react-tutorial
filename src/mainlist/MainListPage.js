@@ -8,8 +8,25 @@ class MainListPage extends React.Component {
   constructor(props) {
     super(props)
     this.state = {
-      elements: []
+      elements: [],
+      originalElements: [],
+      filterValue: ''
     };
+    this.changeFilter = this.changeFilter.bind(this);
+  }
+
+  changeFilter(e) {
+    let filterValue = e.target.value
+    let elements = filterValue ?
+      this.state.originalElements.filter(
+        element => element.name.includes(filterValue)
+      ) : this.state.originalElements
+
+    this.setState({
+      ...this.state,
+      elements,
+      filterValue
+    })
   }
 
   // Lifecycle Method
@@ -19,7 +36,11 @@ class MainListPage extends React.Component {
     console.log('componentDidMount');
     getDataProvider()
       .getMainListData()
-      .then(elements => this.setState({elements}))
+      .then(elements => this.setState({
+        ...this.state,
+        elements,
+        originalElements:elements
+      }))
   }
 
   componentWillUnmount() {
@@ -30,7 +51,10 @@ class MainListPage extends React.Component {
 
   render() {
     return (
-      <MainListPagePresentation {...this.state} />
+      <>
+        <Filter filterValue={this.state.filterValue} changeFilter={this.changeFilter} />
+        <MainListPagePresentation elements={this.state.elements} />
+      </>
     )
   }
 }
@@ -54,6 +78,15 @@ function MainListPagePresentation(props) {
           <Body {...props} />
         </tbody>
       </table>
+    </div>
+  )
+}
+
+function Filter({filterValue, changeFilter}) {
+  return (
+    <div>
+      <label htmlFor="filter">Filter</label>
+      <input id='filter' value={filterValue} onChange={changeFilter} />
     </div>
   )
 }
