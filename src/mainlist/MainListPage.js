@@ -27,36 +27,56 @@ class MainListPage extends React.Component {
   }
 
   render() {
-    let rows = this.state.elements.map(element => {
-      return (
-        <tr key={element.position}>
-          <td>{element.position}</td>
-          <td>{element.name}</td>
-          <td>{element.weight}</td>
-          <td>{element.symbol}</td>
-        </tr>
-      )
-    });  
-
     return (
-      <div>
-      	<h2>Main List Page</h2>
-        <table className="table">
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>Name</th>
-              <th>Weight</th>
-              <th>Symbol</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows}
-          </tbody>
-        </table>
-    	</div>
+      <MainListPagePresentation {...this.state} />
     )
   }
 }
 
 export default MainListPage;
+
+function MainListPagePresentation(props) {
+  return (
+    <div>
+      <h2>Main List Page</h2>
+      <table className="table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Name</th>
+            <th>Weight</th>
+            <th>Symbol</th>
+          </tr>
+        </thead>
+        <tbody>
+          <Body {...props} />
+        </tbody>
+      </table>
+    </div>
+  )
+}
+
+function Body({elements}) {
+  return (
+    elements.length > 0
+      ? elements.map(element=><Row key={element.position} {...element} />)
+      : <LoadTime colSpan="4"/>
+    )
+}
+
+function LoadTime({colSpan}) {
+  return (
+    <tr><td colSpan={colSpan}>Please wait while loading</td></tr>
+  )
+}
+
+function Row({position,name,weight,symbol}) {
+  return (
+    <tr>
+      <td>{position}</td>
+      <td>{name}</td>
+      <td>{weight}</td>
+      <td>{symbol}</td>
+    </tr>
+  )
+}
