@@ -1,5 +1,7 @@
 import React from 'react';
 import getDataProvider from '../DataProvider';
+import PropTypes from 'prop-types';
+
 // old class style
 class MainListPage extends React.Component {
   
@@ -60,14 +62,21 @@ function Body({elements}) {
   return (
     elements.length > 0
       ? elements.map(element=><Row key={element.position} {...element} />)
-      : <LoadTime colSpan="4"/>
-    )
+      : <LoadTime colSpan={4} /*render={ msg => <h1>{msg}</h1> }*/ />
+  )
 }
 
-function LoadTime({colSpan}) {
+function LoadTime({colSpan, render}) {
+  let msg = "Please wait while loading"
+  let view = render ? render(msg) : <p>{msg}</p>
   return (
-    <tr><td colSpan={colSpan}>Please wait while loading</td></tr>
+    <tr><td colSpan={colSpan}>{view}</td></tr>
   )
+}
+
+LoadTime.propTypes = {
+  colSpan:PropTypes.number.isRequired,
+  render:PropTypes.func
 }
 
 function Row({position,name,weight,symbol}) {
