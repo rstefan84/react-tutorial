@@ -1,70 +1,46 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import getDataProvider from '../DataProvider';
 import PropTypes from 'prop-types';
 
-// old class style
-class MainListPage extends React.Component {
+function MainListPage() {
   
-  constructor(props) {
-    super(props)
-    this.state = {
-      elements: [],
-      originalElements: [],
-      filterValue: ''
-    };
-    this.changeFilter = this.changeFilter.bind(this);
+  let [originalElements, setOriginalElements] = useState([])
+  let [elements, setElements] = useState([])
+
+  const changeFilter = (filterValue) => {
+    let filteredElements = filterValue ?
+      originalElements.filter(
+        element => element.name.toLowerCase().includes(filterValue.toLowerCase())
+      ) : originalElements
+
+    setElements(filteredElements)
   }
 
-  changeFilter(e) {
-    let filterValue = e.target.value
-    let elements = filterValue ?
-      this.state.originalElements.filter(
-        element => element.name.includes(filterValue)
-      ) : this.state.originalElements
-
-    this.setState({
-      ...this.state,
-      elements,
-      filterValue
-    })
-  }
-
-  // Lifecycle Method
-  componentDidMount() {
-    // get Data from provider and set to local state
-    // subscribe to updates, ...
-    console.log('componentDidMount');
+  useEffect(()=>{
+    console.log('DidMount from effect hook')
     getDataProvider()
       .getMainListData()
-      .then(elements => this.setState({
-        ...this.state,
-        elements,
-        originalElements:elements
-      }))
-  }
+      .then(loadedElements => {
+        setOriginalElements(loadedElements)
+        setElements(loadedElements)
+      })
+      return () => {
+        console.log('cleanup code')
+      }
+  },[]) // No dependencies - exec useEffect only once!
 
-  componentWillUnmount() {
-    // Do unmount - never set state here
-    // unsubscribe from updates, ... 
-    console.log('componentWillUnmount');
-  }
-
-  render() {
-    return (
-      <>
-        <Filter filterValue={this.state.filterValue} changeFilter={this.changeFilter} />
-        <MainListPagePresentation elements={this.state.elements} />
-      </>
-    )
-  }
+  return (
+    <MainListPagePresentation elements={elements} changeFilter={changeFilter} />
+  )
 }
 
 export default MainListPage;
 
-function MainListPagePresentation(props) {
+function MainListPagePresentation({elements, changeFilter}) {
   return (
     <div>
       <h2>Main List Page</h2>
+      <Filter changeFilter={changeFilter} />
       <table className="table">
         <thead>
           <tr>
@@ -75,18 +51,25 @@ function MainListPagePresentation(props) {
           </tr>
         </thead>
         <tbody>
-          <Body {...props} />
+          <Body elements={elements} />
         </tbody>
       </table>
     </div>
   )
 }
 
-function Filter({filterValue, changeFilter}) {
+function Filter({changeFilter}) {
+  let [filterValue, setFilterValue] = useState('')
+
+  const internalChangeFilter=(e) => {
+    setFilterValue(e.target.value)
+    changeFilter(e.target.value)
+  }
+  
   return (
     <div>
-      <label htmlFor="filter">Filter</label>
-      <input id='filter' value={filterValue} onChange={changeFilter} />
+      <label htmlFor="filter">Filter :&nbsp;</label>
+      <input id='filter' value={filterValue} onChange={internalChangeFilter} />
     </div>
   )
 }
