@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useReducer, useContext, useMemo } from 'react';
+import React, { useState, useEffect, useReducer, useContext, useMemo, useCallback } from 'react';
 import getDataProvider from '../DataProvider';
 import PropTypes from 'prop-types';
 
@@ -103,12 +103,12 @@ export default MainListPage;
 function useSelectedElement(elements) {
   let [selectedElement,setSelectedElement] = useState(null)
 
-  let selectElement = position => {
+  let selectElement = useCallback(position => {
     let element = elements.find(el=> el.position === position)
     if(element) {
       setSelectedElement(element)
     }
-  }
+  },[elements])
 
   return [selectedElement, selectElement]
 }
@@ -116,11 +116,19 @@ function useSelectedElement(elements) {
 function MainListPagePresentation({elements}) {
   let [selectedElement,selectElement] = useSelectedElement(elements)
 
+  let body = useMemo(()=>{
+    return <Body elements={elements} selectElement={selectElement}/>
+  },[elements,selectElement])
+
+  let edit = useMemo(()=>{
+    return <MainListEdit {...{ selectedElement}}/>
+  },[selectedElement])
+
   return (
     <div>
       <h2>Main List Page</h2>
       <Filter />
-      <MainListEdit {...{selectedElement}} />
+      {edit}
       <table className="table">
         <thead>
           <tr>
@@ -132,7 +140,7 @@ function MainListPagePresentation({elements}) {
           </tr>
         </thead>
         <tbody>
-          <Body elements={elements} selectElement={selectElement} />
+          {body}
         </tbody>
       </table>
     </div>
