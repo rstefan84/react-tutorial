@@ -5,6 +5,7 @@ import AboutPage from './components/AboutPage';
 import MainListPage from './mainlist/MainListPage';
 import PageNotFound from './PageNotFound';
 import { Route, Routes } from 'react-router-dom';
+import ServiceListPage from './mainlist/ServiceListPage';
 
 function App() {
   return (
@@ -13,6 +14,7 @@ function App() {
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/mainlist" element={<MainListPage />} />
+        <Route path="/servicelist" element={<ServiceListPage />} />
         <Route path="/about" element={<AboutPage />} />
         <Route path="*" element={<PageNotFound />} />
       </Routes>

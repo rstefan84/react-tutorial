@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useReducer, useContext, useMemo, useCallback } from 'react';
-import getDataProvider from '../DataProvider';
+import getServiceDataProvider from '../ServiceDataProvider';
 import PropTypes from 'prop-types';
 
 const ACTIONS = {
@@ -64,7 +64,7 @@ const mainListReducer = (state,action) => {
 // Create Dispatch Context Object 
 const DispatchContext = React.createContext(null)
 
-function MainListPage() {
+function ServiceListPage() {
   
   let [state,dispatch] = useReducer(mainListReducer,{
     originalElements:[],
@@ -73,13 +73,14 @@ function MainListPage() {
 
   useEffect(()=>{
     console.log('DidMount from effect hook')
-    getDataProvider()
+    let subscription = getServiceDataProvider()
       .getMainListData()
-      .then(loadedElements => {
-        dispatch(createInitElements(loadedElements))
+      .subscribe(loadedElements => {
+        dispatch(createInitElements(loadedElements))                
       })
       return () => {
         console.log('cleanup code')
+        subscription.unsubscribe()
       }
   },[]) // No dependencies - exec useEffect only once!
 
@@ -90,7 +91,7 @@ function MainListPage() {
   )
 }
 
-export default MainListPage;
+export default ServiceListPage;
 
 function useSelectedElement(elements) {
   let [selectedElement,setSelectedElement] = useState(null)
@@ -118,7 +119,7 @@ function MainListPagePresentation({elements}) {
 
   return (
     <div>
-      <h2>Main List Page</h2>
+      <h2>Service List Page</h2>
       <Filter />
       {edit}
       <table className="table">
