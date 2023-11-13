@@ -16,6 +16,15 @@ function MainListPage() {
     setElements(filteredElements)
   }
 
+  let saveElement = (element) => {
+    let newOriginalElements = [
+      ...originalElements.filter(el => el.position !== element.position),
+      element
+    ] 
+    setOriginalElements(newOriginalElements)
+    setElements(newOriginalElements)
+  }
+
   useEffect(()=>{
     console.log('DidMount from effect hook')
     getDataProvider()
@@ -30,18 +39,37 @@ function MainListPage() {
   },[]) // No dependencies - exec useEffect only once!
 
   return (
-    <MainListPagePresentation elements={elements} changeFilter={changeFilter} />
+    <MainListPagePresentation
+      elements={elements}
+      changeFilter={changeFilter}
+      saveElement={saveElement}
+    />
   )
 }
 
 export default MainListPage;
 
-function MainListPagePresentation({elements, changeFilter}) {
+function useSelectedElement(elements) {
+  let [selectedElement,setSelectedElement] = useState(null)
+
+  let selectElement = position => {
+    let element = elements.find(el=> el.position === position)
+    if(element) {
+      setSelectedElement(element)
+    }
+  }
+
+  return [selectedElement, selectElement]
+}
+
+function MainListPagePresentation({elements, changeFilter, saveElement}) {
+  let [selectedElement,selectElement] = useSelectedElement(elements)
+
   return (
     <div>
       <h2>Main List Page</h2>
       <Filter changeFilter={changeFilter} />
-      <MainListEdit />
+      <MainListEdit {...{saveElement, selectedElement}} />
       <table className="table">
         <thead>
           <tr>
@@ -49,10 +77,11 @@ function MainListPagePresentation({elements, changeFilter}) {
             <th>Name</th>
             <th>Weight</th>
             <th>Symbol</th>
+            <th>Action</th>
           </tr>
         </thead>
         <tbody>
-          <Body elements={elements} />
+          <Body elements={elements} selectElement={selectElement} />
         </tbody>
       </table>
     </div>
@@ -75,7 +104,7 @@ function Filter({changeFilter}) {
   )
 }
 
-function MainListEdit() {
+function MainListEdit({saveElement, selectedElement}) {
   let defaultValues = {
     position: '',
     name: '',
@@ -84,12 +113,20 @@ function MainListEdit() {
   }
   let [editValues,changeValues] = useState(defaultValues);
 
+  useEffect(()=>{
+    if(selectedElement) {
+      changeValues(selectedElement) 
+    }
+  },[selectedElement])
+
   let onChangedSimpleInput = (inputId,value) => {
     changeValues({
       ...editValues,
       [inputId]:value
     })
   }
+
+  let onSave = (e) => saveElement(editValues)
   
   return(
     <table>
@@ -129,7 +166,7 @@ function MainListEdit() {
           </td>
           <td>
             &nbsp;&nbsp;&nbsp;
-            <button>Save</button>
+            <button onClick={onSave}>Save</button>
           </td>
         </tr>
       </tbody>
@@ -139,6 +176,9 @@ function MainListEdit() {
 
 function SimpleInput({inputId,size, name, defaultValue,onChanged}) {
   let [value,setValue]=useState(defaultValue)
+
+  useEffect(()=>setValue(defaultValue),[defaultValue])
+
   let onChangeInput = e => setValue(e.target.value)
   let onBlurInput = e => onChanged(inputId,value)
   return (
@@ -153,11 +193,11 @@ function SimpleInput({inputId,size, name, defaultValue,onChanged}) {
   )
 }
 
-function Body({elements}) {
+function Body({elements, selectElement}) {
   return (
     elements.length > 0
-      ? elements.map(element=><Row key={element.position} {...element} />)
-      : <LoadTime colSpan={4} /*render={ msg => <h1>{msg}</h1> }*/ />
+      ? elements.map(element=><Row key={element.position} {...{...element, selectElement}} />)
+      : <LoadTime colSpan={5} /*render={ msg => <h1>{msg}</h1> }*/ />
   )
 }
 
@@ -174,13 +214,16 @@ LoadTime.propTypes = {
   render:PropTypes.func
 }
 
-function Row({position,name,weight,symbol}) {
+function Row({position,name,weight,symbol,selectElement}) {
   return (
     <tr>
       <td>{position}</td>
       <td>{name}</td>
       <td>{weight}</td>
       <td>{symbol}</td>
+      <td>
+        <button onClick={(e)=>selectElement(position)}>Select</button>
+      </td>
     </tr>
   )
 }
