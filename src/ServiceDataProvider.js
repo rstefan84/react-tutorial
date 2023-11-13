@@ -1,4 +1,4 @@
-import { from } from 'rxjs';
+import { Subject, BehaviorSubject } from 'rxjs';
 
 
 // Dummy Data - to be replaced by Server Data
@@ -17,9 +17,51 @@ const ELEMENT_DATA = [
 
 // Data Provider Class
 class ServiceDataProvider {
-  getMainListData() {
-    return from([ELEMENT_DATA])
+  constructor() {
+    this.originalElements = [...ELEMENT_DATA]
+    this.elements$ = new BehaviorSubject(this.originalElements)
+    this.selectedElement$ = new Subject(null)
   }
+
+  getElements$() {
+    return this.elements$
+  }
+
+  getSelectedElement$() {
+    return this.selectedElement$
+  }
+
+  selectElement(position) {
+    let element = this.originalElements.find(el=>el.position===position)
+    this.selectedElement$.next(element)
+  }
+
+  filter(filterValue) {
+    this.elements$.next(
+      filterValue?
+        this.originalElements.filter(
+          element => element.name.toLowerCase().includes(filterValue.toLowerCase())
+        ):this.originalElements
+    )
+  }
+
+  saveElement(element) {
+    let newOriginalElements = [
+      ...this.originalElements.filter(el=>el.position!==element.position),
+      element
+    ] 
+    this.originalElements = newOriginalElements
+    this.elements$.next(this.originalElements)
+  }
+
+  deleteElement(position) {
+    let lessOriginalElements = [
+      ...this.originalElements.filter(el=>el.position!==position)
+    ]
+    this.originalElements = lessOriginalElements
+    this.elements$.next(this.originalElements)
+  }
+
 }
 
 // global data Provider instance holder

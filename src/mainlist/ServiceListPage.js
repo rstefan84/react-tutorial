@@ -1,121 +1,23 @@
-import React, { useState, useEffect, useReducer, useContext, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import getServiceDataProvider from '../ServiceDataProvider';
 import PropTypes from 'prop-types';
 
-const ACTIONS = {
-  INIT_ELEMENTS : 'MAINLIST/INIT_ELEMENTS',
-  SAVE_ELEMENT : 'MAINLIST/SAVE_ELEMENT',
-  SET_FILTER : 'MAINLIST/SET_FILTER',
-  DELETE_ELEMENT : 'MAINLIST/DELETE_ELEMENT'
-}
-
-const createInitElements = payload => { return {type:ACTIONS.INIT_ELEMENTS, payload}}
-const createSaveElement = payload => { return {type:ACTIONS.SAVE_ELEMENT, payload}}
-const createSetFilter = payload => { return {type:ACTIONS.SET_FILTER, payload}}
-const createDeleteElement = payload => { return {type:ACTIONS.DELETE_ELEMENT, payload}}
-
-const mainListReducer = (state,action) => {
-  switch(action.type) {
-    case ACTIONS.INIT_ELEMENTS:
-      let loadedElements = action.payload
-      return {
-          originalElements:[...loadedElements],
-          elements:[...loadedElements]
-      }
-
-    case ACTIONS.SAVE_ELEMENT:
-      let element=action.payload
-      let newOriginalElements = [
-        ...state.originalElements.filter(el=>el.position!==element.position),
-        element
-      ] 
-      return {
-        originalElements:newOriginalElements,
-        elements:newOriginalElements
-      }
-
-    case ACTIONS.SET_FILTER:
-      let filterValue=action.payload
-      let filteredElements = 
-        filterValue?
-        state.originalElements.filter(
-          element => element.name.toLowerCase().includes(filterValue.toLowerCase())
-        ):state.originalElements
-      return {
-        ...state,
-        elements:filteredElements
-      }
-
-    case ACTIONS.DELETE_ELEMENT:
-      let position = action.payload
-      let lessOriginalElements = [
-        ...state.originalElements.filter(el=>el.position!==position)
-      ] 
-      return {
-        originalElements:lessOriginalElements,
-        elements:lessOriginalElements
-      }
-
-    default:
-      throw new Error()
-  }
-}
-
-// Create Dispatch Context Object 
-const DispatchContext = React.createContext(null)
+const ServiceContext = React.createContext(null)
 
 function ServiceListPage() {
   
-  let [state,dispatch] = useReducer(mainListReducer,{
-    originalElements:[],
-    elements:[]
-  })
-
-  useEffect(()=>{
-    console.log('DidMount from effect hook')
-    let subscription = getServiceDataProvider()
-      .getMainListData()
-      .subscribe(loadedElements => {
-        dispatch(createInitElements(loadedElements))                
-      })
-      return () => {
-        console.log('cleanup code')
-        subscription.unsubscribe()
-      }
-  },[]) // No dependencies - exec useEffect only once!
-
   return (
-    <DispatchContext.Provider value={dispatch}>
-      <MainListPagePresentation elements={state.elements} />
-    </DispatchContext.Provider>
+    <ServiceContext.Provider value={getServiceDataProvider()}>
+      <ServiceListPagePresentation />
+    </ServiceContext.Provider>
   )
 }
 
 export default ServiceListPage;
 
-function useSelectedElement(elements) {
-  let [selectedElement,setSelectedElement] = useState(null)
-
-  let selectElement = useCallback(position => {
-    let element = elements.find(el=> el.position === position)
-    if(element) {
-      setSelectedElement(element)
-    }
-  },[elements])
-
-  return [selectedElement, selectElement]
-}
-
-function MainListPagePresentation({elements}) {
-  let [selectedElement,selectElement] = useSelectedElement(elements)
-
-  let body = useMemo(()=>{
-    return <Body elements={elements} selectElement={selectElement}/>
-  },[elements,selectElement])
-
-  let edit = useMemo(()=>{
-    return <MainListEdit {...{ selectedElement}}/>
-  },[selectedElement])
+function ServiceListPagePresentation() {
+  let body = <Body/>
+  let edit = <ServiceListEdit/>
 
   return (
     <div>
@@ -143,12 +45,11 @@ function MainListPagePresentation({elements}) {
 function Filter() {
   let [filterValue, setFilterValue] = useState('')
 
-  // USE CONTEXT AND DISPATCH SAVE_ELEMENT ACTION
-  let dispatch = useContext(DispatchContext)
+  let service = useContext(ServiceContext)
 
   const internalChangeFilter=(e) => {
     setFilterValue(e.target.value)
-    dispatch(createSetFilter(e.target.value))
+    service.filter(e.target.value)
   }
   
   return (
@@ -159,7 +60,7 @@ function Filter() {
   )
 }
 
-function MainListEdit({selectedElement}) {
+function ServiceListEdit() {
   let defaultValues = {
     position: '',
     name: '',
@@ -168,11 +69,18 @@ function MainListEdit({selectedElement}) {
   }
   let [editValues,changeValues] = useState(defaultValues);
 
+  let service = useContext(ServiceContext)
+
   useEffect(()=>{
-    if(selectedElement) {
-      changeValues(selectedElement) 
-    }
-  },[selectedElement])
+    let subscription = service.getSelectedElement$()
+      .subscribe((selectedElement)=>{
+        if(selectedElement)
+          changeValues(selectedElement)
+        })
+        return ()=>{
+          subscription.unsubscribe()
+        }
+    },[service])
 
   let onChangedSimpleInput = (inputId,value) => {
     changeValues({
@@ -181,10 +89,7 @@ function MainListEdit({selectedElement}) {
     })
   }
 
-  // USE CONTEXT AND DISPATCH SAVE_ELEMENT ACTION
-  let dispatch = useContext(DispatchContext)
-
-  let onSave = (e) => dispatch(createSaveElement(editValues))
+  let onSave = (e) => service.saveElement(editValues)
   
   return(
     <table>
@@ -251,10 +156,23 @@ function SimpleInput({inputId,size, name, defaultValue,onChanged}) {
   )
 }
 
-function Body({elements, selectElement}) {
+function Body() {
+  
+  let service = useContext(ServiceContext)
+  let [elements,setElements]=useState([])
+  useEffect(()=>{
+    let subscription = service.getElements$()
+    .subscribe((newElements)=>{
+      setElements(newElements)
+    })
+    return ()=>{
+      subscription.unsubscribe()
+    }
+  },[service])
+
   return (
     elements.length > 0
-      ? elements.map(element=><Row key={element.position} {...{...element, selectElement}} />)
+      ? elements.map(element=><Row key={element.position} {...{...element}} />)
       : <LoadTime colSpan={5} /*render={ msg => <h1>{msg}</h1> }*/ />
   )
 }
@@ -272,8 +190,8 @@ LoadTime.propTypes = {
   render:PropTypes.func
 }
 
-function Row({position,name,weight,symbol,selectElement}) {
-  let dispatch = useContext(DispatchContext)
+function Row({position,name,weight,symbol}) {
+  let service = useContext(ServiceContext)
   
   return (
     <tr>
@@ -282,8 +200,8 @@ function Row({position,name,weight,symbol,selectElement}) {
       <td>{weight}</td>
       <td>{symbol}</td>
       <td>
-        <button onClick={(e)=>selectElement(position)}>Select</button>
-        <button onClick={(e)=>dispatch(createDeleteElement(position))}>Delete</button>
+        <button onClick={(e)=>service.selectElement(position)}>Select</button>
+        <button onClick={(e)=>service.deleteElement(position)}>Delete</button>
       </td>
     </tr>
   )
