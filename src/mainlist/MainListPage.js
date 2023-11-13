@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useReducer, useContext } from 'react';
+import React, { useState, useEffect, useReducer, useContext, useMemo } from 'react';
 import getDataProvider from '../DataProvider';
 import PropTypes from 'prop-types';
 
@@ -113,7 +113,7 @@ function useSelectedElement(elements) {
   return [selectedElement, selectElement]
 }
 
-function MainListPagePresentation({elements, saveElement}) {
+function MainListPagePresentation({elements}) {
   let [selectedElement,selectElement] = useSelectedElement(elements)
 
   return (
@@ -139,7 +139,7 @@ function MainListPagePresentation({elements, saveElement}) {
   )
 }
 
-function Filter({changeFilter}) {
+function Filter() {
   let [filterValue, setFilterValue] = useState('')
 
   // USE CONTEXT AND DISPATCH SAVE_ELEMENT ACTION
