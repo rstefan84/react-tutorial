@@ -1,28 +1,82 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useReducer, useContext } from 'react';
 import getDataProvider from '../DataProvider';
 import PropTypes from 'prop-types';
 
+const ACTIONS = {
+  INIT_ELEMENTS : 'MAINLIST/INIT_ELEMENTS',
+  SAVE_ELEMENT : 'MAINLIST/SAVE_ELEMENT',
+  SET_FILTER : 'MAINLIST/SET_FILTER',
+  DELETE_ELEMENT : 'MAINLIST/DELETE_ELEMENT'
+}
+
+const createInitElements = payload => { return {type:ACTIONS.INIT_ELEMENTS, payload}}
+const createSaveElement = payload => { return {type:ACTIONS.SAVE_ELEMENT, payload}}
+const createSetFilter = payload => { return {type:ACTIONS.SET_FILTER, payload}}
+const createDeleteElement = payload => { return {type:ACTIONS.DELETE_ELEMENT, payload}}
+
+const mainListReducer = (state,action) => {
+  switch(action.type) {
+    case ACTIONS.INIT_ELEMENTS:
+      let loadedElements = action.payload
+      return {
+          originalElements:[...loadedElements],
+          elements:[...loadedElements]
+      }
+
+    case ACTIONS.SAVE_ELEMENT:
+      let element=action.payload
+      let newOriginalElements = [
+        ...state.originalElements.filter(el=>el.position!==element.position),
+        element
+      ] 
+      return {
+        originalElements:newOriginalElements,
+        elements:newOriginalElements
+      }
+
+    case ACTIONS.SET_FILTER:
+      let filterValue=action.payload
+      let filteredElements = 
+        filterValue?
+        state.originalElements.filter(
+          element => element.name.toLowerCase().includes(filterValue.toLowerCase())
+        ):state.originalElements
+      return {
+        ...state,
+        elements:filteredElements
+      }
+
+    case ACTIONS.DELETE_ELEMENT:
+      let position = action.payload
+      let lessOriginalElements = [
+        ...state.originalElements.filter(el=>el.position!==position)
+      ] 
+      return {
+        originalElements:lessOriginalElements,
+        elements:lessOriginalElements
+      }
+
+    default:
+      throw new Error()
+  }
+}
+
+// Create Dispatch Context Object 
+const DispatchContext = React.createContext(null)
+
 function MainListPage() {
   
-  let [originalElements, setOriginalElements] = useState([])
-  let [elements, setElements] = useState([])
+  let [state,dispatch] = useReducer(mainListReducer,{
+    originalElements:[],
+    elements:[]
+  })
 
-  const changeFilter = (filterValue) => {
-    let filteredElements = filterValue ?
-      originalElements.filter(
-        element => element.name.toLowerCase().includes(filterValue.toLowerCase())
-      ) : originalElements
-
-    setElements(filteredElements)
+  const changeFilter = filterValue => {
+    dispatch(createSetFilter(filterValue))
   }
 
   let saveElement = (element) => {
-    let newOriginalElements = [
-      ...originalElements.filter(el => el.position !== element.position),
-      element
-    ] 
-    setOriginalElements(newOriginalElements)
-    setElements(newOriginalElements)
+    dispatch(createSaveElement(element))
   }
 
   useEffect(()=>{
@@ -30,8 +84,7 @@ function MainListPage() {
     getDataProvider()
       .getMainListData()
       .then(loadedElements => {
-        setOriginalElements(loadedElements)
-        setElements(loadedElements)
+        dispatch(createInitElements(loadedElements))
       })
       return () => {
         console.log('cleanup code')
@@ -39,11 +92,9 @@ function MainListPage() {
   },[]) // No dependencies - exec useEffect only once!
 
   return (
-    <MainListPagePresentation
-      elements={elements}
-      changeFilter={changeFilter}
-      saveElement={saveElement}
-    />
+    <DispatchContext.Provider value={dispatch}>
+      <MainListPagePresentation elements={state.elements} />
+    </DispatchContext.Provider>
   )
 }
 
@@ -62,14 +113,14 @@ function useSelectedElement(elements) {
   return [selectedElement, selectElement]
 }
 
-function MainListPagePresentation({elements, changeFilter, saveElement}) {
+function MainListPagePresentation({elements, saveElement}) {
   let [selectedElement,selectElement] = useSelectedElement(elements)
 
   return (
     <div>
       <h2>Main List Page</h2>
-      <Filter changeFilter={changeFilter} />
-      <MainListEdit {...{saveElement, selectedElement}} />
+      <Filter />
+      <MainListEdit {...{selectedElement}} />
       <table className="table">
         <thead>
           <tr>
@@ -91,9 +142,12 @@ function MainListPagePresentation({elements, changeFilter, saveElement}) {
 function Filter({changeFilter}) {
   let [filterValue, setFilterValue] = useState('')
 
+  // USE CONTEXT AND DISPATCH SAVE_ELEMENT ACTION
+  let dispatch = useContext(DispatchContext)
+
   const internalChangeFilter=(e) => {
     setFilterValue(e.target.value)
-    changeFilter(e.target.value)
+    dispatch(createSetFilter(e.target.value))
   }
   
   return (
@@ -104,7 +158,7 @@ function Filter({changeFilter}) {
   )
 }
 
-function MainListEdit({saveElement, selectedElement}) {
+function MainListEdit({selectedElement}) {
   let defaultValues = {
     position: '',
     name: '',
@@ -126,7 +180,10 @@ function MainListEdit({saveElement, selectedElement}) {
     })
   }
 
-  let onSave = (e) => saveElement(editValues)
+  // USE CONTEXT AND DISPATCH SAVE_ELEMENT ACTION
+  let dispatch = useContext(DispatchContext)
+
+  let onSave = (e) => dispatch(createSaveElement(editValues))
   
   return(
     <table>
@@ -215,6 +272,8 @@ LoadTime.propTypes = {
 }
 
 function Row({position,name,weight,symbol,selectElement}) {
+  let dispatch = useContext(DispatchContext)
+  
   return (
     <tr>
       <td>{position}</td>
@@ -223,6 +282,7 @@ function Row({position,name,weight,symbol,selectElement}) {
       <td>{symbol}</td>
       <td>
         <button onClick={(e)=>selectElement(position)}>Select</button>
+        <button onClick={(e)=>dispatch(createDeleteElement(position))}>Delete</button>
       </td>
     </tr>
   )
