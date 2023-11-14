@@ -40,3 +40,13 @@ export {
   createDeleteElement,
   createSelectElement
 }
+
+const selectLoadingError = (state) => state.reduxList.loadingError
+const selectSelected = (state) => state.reduxList.selected
+const selectElements = (state) => state.reduxList.elements
+
+export {
+  selectLoadingError,
+  selectSelected,
+  selectElements
+}

@@ -9,12 +9,16 @@ import {
   createSaveElement,
   createSetFilter,
   createDeleteElement,
-  createSelectElement
+  createSelectElement,
+
+  selectElements,
+  selectLoadingError,
+  selectSelected
 } from '../redux/reduxListActions'
 
 // ReduxListPage
 const mapStateToProps_ReduxListPage = state => {
-  let loadingError = state.reduxList.loadingError
+  let loadingError = selectLoadingError(state)
   return {
     loadingError
   }
@@ -108,7 +112,7 @@ function _Filter({ setFilter }) {
 }
 
 const mapStateToProps_MainListEdit = state => {
-  let selectedElement = state.reduxList.selected
+  let selectedElement = selectSelected(state)
   return {
     selectedElement
   }
@@ -213,8 +217,8 @@ function SimpleInput({ inputId, size, name, defaultValue, onChanged }) {
 }
 
 const mapStateToProps_Body = state => {
-  let elements = state.reduxList.elements
-  let loadingError = state.reduxList.loadingError
+  let elements = selectElements(state)
+  let loadingError = selectLoadingError(state)
   return {
     elements,
     loadingError
