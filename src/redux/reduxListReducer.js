@@ -2,7 +2,8 @@ import ACTIONS from "./reduxListActions";
 
 const base_state = {
   originalElements: [],
-  elements: []
+  elements: [],
+  selected: null,
 }
 
 const reduxList = (state = base_state, action) => {
@@ -45,6 +46,14 @@ const reduxList = (state = base_state, action) => {
       return {
         originalElements: lessOriginalElements,
         elements: lessOriginalElements
+      }
+
+    case ACTIONS.SELECT_ELEMENT:
+      let selected_position = action.payload
+      let selected = state.originalElements.find(el => el.position === selected_position)
+      return {
+        ...state,
+        selected
       }
 
     default:

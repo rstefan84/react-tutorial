@@ -11,6 +11,7 @@ import { BrowserRouter as Router } from 'react-router-dom';
 
 const store = configureStore({
   reducer,
+  devTools: process.env.NODE_ENV !== 'production'
 })
 
 const root = ReactDOM.createRoot(document.getElementById('root'));

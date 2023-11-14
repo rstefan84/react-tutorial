@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext, useMemo, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import getDataProvider from '../DataProvider';
 import PropTypes from 'prop-types';
 
@@ -8,22 +8,18 @@ import {
   createInitElements,
   createSaveElement,
   createSetFilter,
-  createDeleteElement
+  createDeleteElement,
+  createSelectElement
 } from '../redux/reduxListActions'
-
-// Create Dispatch Context Object 
-const DispatchContext = React.createContext(null)
 
 // ReduxListPage
 const mapStateToProps_ReduxListPage = state => {
-  let elements = state.reduxList.elements
   return {
-    elements
   }
 }
 
-const mapDispatchToProps_ReduxListPage = dispatch => {
-  return { dispatch }
+const mapDispatchToProps_ReduxListPage = {
+  initElements: createInitElements
 }
 
 const ReduxListPage = connect(
@@ -31,56 +27,34 @@ const ReduxListPage = connect(
   mapDispatchToProps_ReduxListPage
 )(_ReduxListPage)
 
-function _ReduxListPage({elements, dispatch}) {
+function _ReduxListPage({ initElements }) {
 
   useEffect(() => {
     console.log('DidMount from effect hook')
     getDataProvider()
       .getMainListData()
       .then(loadedElements => {
-        dispatch(createInitElements(loadedElements))
+        initElements(loadedElements)
       })
     return () => {
       console.log('cleanup code')
     }
-  }, [dispatch]) // No dependencies - exec useEffect only once!
+  }, [initElements]) // No dependencies - exec useEffect only once!
 
   return (
-    <DispatchContext.Provider value={dispatch}>
-      <MainListPagePresentation elements={elements} />
-    </DispatchContext.Provider>
+    <ReduxListPagePresentation />
   )
 }
 
 export default ReduxListPage;
 
-function useSelectedElement(elements) {
-  let [selectedElement, setSelectedElement] = useState(null)
-
-  let selectElement = useCallback(position => {
-    let element = elements.find(el => el.position === position)
-    if (element) {
-      setSelectedElement(element)
-    }
-  }, [elements])
-
-  return [selectedElement, selectElement]
-}
-
-function MainListPagePresentation({ elements }) {
-  let [selectedElement, selectElement] = useSelectedElement(elements)
-
-  let body = useMemo(() => {
-    return <Body elements={elements} selectElement={selectElement} />
-  }, [elements, selectElement])
-
-  let edit = useMemo(() => {
-    return <MainListEdit {...{ selectedElement }} />
-  }, [selectedElement])
+function ReduxListPagePresentation() {
+  let body = <Body />
+  let edit = <MainListEdit />
 
   return (
     <div>
-      <h2>Main List Page</h2>
+      <h2>Redux List Page</h2>
       <Filter />
       {edit}
       <table className="table">
@@ -101,15 +75,26 @@ function MainListPagePresentation({ elements }) {
   )
 }
 
-function Filter() {
-  let [filterValue, setFilterValue] = useState('')
+const mapStateToProps_Filter = state => {
+  return {
+  }
+}
 
-  // USE CONTEXT AND DISPATCH SAVE_ELEMENT ACTION
-  let dispatch = useContext(DispatchContext)
+const mapDispatchToProps_Filter = {
+  setFilter: createSetFilter
+}
+
+const Filter = connect(
+  mapStateToProps_Filter,
+  mapDispatchToProps_Filter
+)(_Filter)
+
+function _Filter({ setFilter }) {
+  let [filterValue, setFilterValue] = useState('')
 
   const internalChangeFilter = (e) => {
     setFilterValue(e.target.value)
-    dispatch(createSetFilter(e.target.value))
+    setFilter(e.target.value)
   }
 
   return (
@@ -120,7 +105,23 @@ function Filter() {
   )
 }
 
-function MainListEdit({ selectedElement }) {
+const mapStateToProps_MainListEdit = state => {
+  let selectedElement = state.reduxList.selected
+  return {
+    selectedElement
+  }
+}
+
+const mapDispatchToProps_MainListEdit = {
+  saveElement: createSaveElement
+}
+
+const MainListEdit = connect(
+  mapStateToProps_MainListEdit,
+  mapDispatchToProps_MainListEdit
+)(_MainListEdit)
+
+function _MainListEdit({ selectedElement, saveElement }) {
   let defaultValues = {
     position: '',
     name: '',
@@ -142,10 +143,7 @@ function MainListEdit({ selectedElement }) {
     })
   }
 
-  // USE CONTEXT AND DISPATCH SAVE_ELEMENT ACTION
-  let dispatch = useContext(DispatchContext)
-
-  let onSave = (e) => dispatch(createSaveElement(editValues))
+  let onSave = (e) => saveElement(editValues)
 
   return (
     <table>
@@ -212,10 +210,25 @@ function SimpleInput({ inputId, size, name, defaultValue, onChanged }) {
   )
 }
 
-function Body({ elements, selectElement }) {
+const mapStateToProps_Body = state => {
+  let elements = state.reduxList.elements
+  return {
+    elements
+  }
+}
+
+const mapDispatchToProps_Body = {
+}
+
+const Body = connect(
+  mapStateToProps_Body,
+  mapDispatchToProps_Body
+)(_Body)
+
+function _Body({ elements }) {
   return (
     elements.length > 0
-      ? elements.map(element => <Row key={element.position} {...{ ...element, selectElement }} />)
+      ? elements.map(element => <Row key={element.position} {...{ ...element }} />)
       : <LoadTime colSpan={5} /*render={ msg => <h1>{msg}</h1> }*/ />
   )
 }
@@ -233,9 +246,22 @@ LoadTime.propTypes = {
   render: PropTypes.func
 }
 
-function Row({ position, name, weight, symbol, selectElement }) {
-  let dispatch = useContext(DispatchContext)
+const mapStateToProps_Row = state => {
+  return {
+  }
+}
 
+const mapDispatchToProps_Row = {
+  selectElement: createSelectElement,
+  deleteElement: createDeleteElement
+}
+
+const Row = connect(
+  mapStateToProps_Row,
+  mapDispatchToProps_Row
+)(_Row)
+
+function _Row({ position, name, weight, symbol, selectElement, deleteElement }) {
   return (
     <tr>
       <td>{position}</td>
@@ -244,7 +270,7 @@ function Row({ position, name, weight, symbol, selectElement }) {
       <td>{symbol}</td>
       <td>
         <button onClick={(e) => selectElement(position)}>Select</button>
-        <button onClick={(e) => dispatch(createDeleteElement(position))}>Delete</button>
+        <button onClick={(e) => deleteElement(position)}>Delete</button>
       </td>
     </tr>
   )
