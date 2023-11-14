@@ -1,26 +1,31 @@
 import React, { useState, useEffect } from 'react';
-import getDataProvider from '../DataProvider';
 import PropTypes from 'prop-types';
 
 // ADD FOR REDUX - START
 import { connect } from 'react-redux'
 import {
   createLoadData,
-  createSaveElement,
+  createSaveStart,
   createSetFilter,
-  createDeleteElement,
+  createDeleteStart,
   createSelectElement,
 
   selectElements,
   selectLoadingError,
-  selectSelected
+  selectSelected,
+  selectSavingError,
+  selectDeleteError
 } from '../redux/reduxListActions'
 
 // ReduxListPage
 const mapStateToProps_ReduxListPage = state => {
   let loadingError = selectLoadingError(state)
+  let savingError = selectSavingError(state)
+  let deleteError = selectDeleteError(state)
   return {
-    loadingError
+    loadingError,
+    savingError,
+    deleteError
   }
 }
 
@@ -33,7 +38,7 @@ const ReduxListPage = connect(
   mapDispatchToProps_ReduxListPage
 )(_ReduxListPage)
 
-function _ReduxListPage({ loadData, loadingError }) {
+function _ReduxListPage({ loadData, loadingError, savingError, deleteError }) {
 
   useEffect(() => {
     loadData()
@@ -41,7 +46,13 @@ function _ReduxListPage({ loadData, loadingError }) {
 
   let error_msg = ''
   if (loadingError) {
-    error_msg = <p>{loadingError}</p>
+    error_msg = <div className='alert alert-danger'>{loadingError}</div>
+  }
+  if (savingError) {
+    error_msg = <>{error_msg}<div className='alert alert-danger'>{savingError}</div></>
+  }
+  if (deleteError) {
+    error_msg = <>{error_msg}<div className='alert alert-danger'>{deleteError}</div></>
   }
 
   return (
@@ -119,7 +130,7 @@ const mapStateToProps_MainListEdit = state => {
 }
 
 const mapDispatchToProps_MainListEdit = {
-  saveElement: createSaveElement
+  saveElement: createSaveStart
 }
 
 const MainListEdit = connect(
@@ -266,7 +277,7 @@ const mapStateToProps_Row = state => {
 
 const mapDispatchToProps_Row = {
   selectElement: createSelectElement,
-  deleteElement: createDeleteElement
+  deleteElement: createDeleteStart
 }
 
 const Row = connect(

@@ -4,7 +4,9 @@ const base_state = {
   originalElements: [],
   elements: [],
   selected: null,
-  loadingError: null
+  loadingError: null,
+  savingError: null,
+  deleteError: null
 }
 
 const reduxList = (state = base_state, action) => {
@@ -15,14 +17,20 @@ const reduxList = (state = base_state, action) => {
     case ACTIONS.INIT_ELEMENTS:
       return apply_INIT_ELEMENTS(action);
 
-    case ACTIONS.SAVE_ELEMENT:
-      return apply_SAVE_ELEMENT(action, state);
+    case ACTIONS.SAVE_SUCCESS:
+      return apply_SAVE_SUCCESS(action, state);
+
+    case ACTIONS.SAVE_ERROR:
+      return apply_SAVE_ERROR(state, action)
 
     case ACTIONS.SET_FILTER:
       return apply_SET_FILTER(action, state);
 
-    case ACTIONS.DELETE_ELEMENT:
-      return apply_DELETE_ELEMENT(action, state);
+    case ACTIONS.DELETE_SUCCESS:
+      return apply_DELETE_SUCCESS(action, state);
+
+    case ACTIONS.DELETE_ERROR:
+      return apply_DELETE_ERROR(action, state);
 
     case ACTIONS.SELECT_ELEMENT:
       return apply_SELECT_ELEMENT(action, state);
@@ -43,7 +51,7 @@ function apply_SELECT_ELEMENT(action, state) {
   };
 }
 
-function apply_DELETE_ELEMENT(action, state) {
+function apply_DELETE_SUCCESS(action, state) {
   let position = action.payload;
   let lessOriginalElements = [
     ...state.originalElements.filter(el => el.position !== position)
@@ -52,6 +60,14 @@ function apply_DELETE_ELEMENT(action, state) {
     originalElements: lessOriginalElements,
     elements: lessOriginalElements
   };
+}
+
+function apply_DELETE_ERROR(state, action) {
+  let error_info = action.payload
+  return {
+    ...state,
+    deleteError: `Problem on delete: ${error_info}`
+  }
 }
 
 function apply_SET_FILTER(action, state) {
@@ -66,7 +82,7 @@ function apply_SET_FILTER(action, state) {
   };
 }
 
-function apply_SAVE_ELEMENT(action, state) {
+function apply_SAVE_SUCCESS(action, state) {
   let element = action.payload;
   let newOriginalElements = [
     ...state.originalElements.filter(el => el.position !== element.position),
@@ -76,6 +92,14 @@ function apply_SAVE_ELEMENT(action, state) {
     originalElements: newOriginalElements,
     elements: newOriginalElements
   };
+}
+
+function apply_SAVE_ERROR(state, action) {
+  let error_info = action.payload
+  return {
+    ...state,
+    savingError: `Problem in saving: ${error_info}`
+  }
 }
 
 function apply_INIT_ELEMENTS(action) {
