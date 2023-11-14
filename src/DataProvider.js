@@ -21,7 +21,8 @@ class DataProvider {
         // or use dummy data :-)
         setTimeout(() => {
           let result_data = ELEMENT_DATA
-          resolve(result_data)
+          //resolve(result_data)
+          reject('No data loaded')
         }, 2000)
       }
     )

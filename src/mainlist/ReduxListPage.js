@@ -5,7 +5,7 @@ import PropTypes from 'prop-types';
 // ADD FOR REDUX - START
 import { connect } from 'react-redux'
 import {
-  createInitElements,
+  createLoadData,
   createSaveElement,
   createSetFilter,
   createDeleteElement,
@@ -14,12 +14,14 @@ import {
 
 // ReduxListPage
 const mapStateToProps_ReduxListPage = state => {
+  let loadingError = state.reduxList.loadingError
   return {
+    loadingError
   }
 }
 
 const mapDispatchToProps_ReduxListPage = {
-  initElements: createInitElements
+  loadData: createLoadData
 }
 
 const ReduxListPage = connect(
@@ -27,22 +29,22 @@ const ReduxListPage = connect(
   mapDispatchToProps_ReduxListPage
 )(_ReduxListPage)
 
-function _ReduxListPage({ initElements }) {
+function _ReduxListPage({ loadData, loadingError }) {
 
   useEffect(() => {
-    console.log('DidMount from effect hook')
-    getDataProvider()
-      .getMainListData()
-      .then(loadedElements => {
-        initElements(loadedElements)
-      })
-    return () => {
-      console.log('cleanup code')
-    }
-  }, [initElements]) // No dependencies - exec useEffect only once!
+    loadData()
+  }, [loadData])
+
+  let error_msg = ''
+  if (loadingError) {
+    error_msg = <p>{loadingError}</p>
+  }
 
   return (
-    <ReduxListPagePresentation />
+    <>
+      {error_msg}
+      <ReduxListPagePresentation />
+    </>
   )
 }
 
@@ -212,8 +214,10 @@ function SimpleInput({ inputId, size, name, defaultValue, onChanged }) {
 
 const mapStateToProps_Body = state => {
   let elements = state.reduxList.elements
+  let loadingError = state.reduxList.loadingError
   return {
-    elements
+    elements,
+    loadingError
   }
 }
 
@@ -225,11 +229,16 @@ const Body = connect(
   mapDispatchToProps_Body
 )(_Body)
 
-function _Body({ elements }) {
+function _Body({ elements, loadingError }) {
+  let load_info = loadingError ?
+    <LoadTime colSpan={5} render={msg => <h1>{loadingError}</h1>} /> :
+    <LoadTime colSpan={5} />
+
+
   return (
     elements.length > 0
       ? elements.map(element => <Row key={element.position} {...{ ...element }} />)
-      : <LoadTime colSpan={5} /*render={ msg => <h1>{msg}</h1> }*/ />
+      : load_info
   )
 }
 

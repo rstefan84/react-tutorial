@@ -4,10 +4,18 @@ const base_state = {
   originalElements: [],
   elements: [],
   selected: null,
+  loadingError: null
 }
 
 const reduxList = (state = base_state, action) => {
   switch (action.type) {
+    case ACTIONS.LOAD_DATA_ERROR:
+      let error_info = action.payload
+      return {
+        ...state,
+        loadingError: `Problem in loading: ${error_info}`
+      }
+
     case ACTIONS.INIT_ELEMENTS:
       let loadedElements = action.payload
       return {

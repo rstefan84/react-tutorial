@@ -8,10 +8,13 @@ import App from './App';
 import reportWebVitals from './reportWebVitals';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { BrowserRouter as Router } from 'react-router-dom';
+import { compose, applyMiddleware } from 'redux'
+import thunk from 'redux-thunk'
 
 const store = configureStore({
   reducer,
-  devTools: process.env.NODE_ENV !== 'production'
+  devTools: process.env.NODE_ENV !== 'production',
+  applyMiddleware: thunk
 })
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
