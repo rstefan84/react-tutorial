@@ -20,23 +20,30 @@ const store = configureStore({
   applyMiddleware: thunk
 })
 
-function App() {
+export function App() {
+  return (
+    <div className="container-fluid">
+      <Header />
+      <Routes>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/mainlist" element={<MainListPage />} />
+        <Route path="/servicelist" element={<ServiceListPage />} />
+        <Route path="/reduxlist" element={<ReduxListPage />} />
+        <Route path="/about" element={<AboutPage />} />
+        <Route path="*" element={<PageNotFound />} />
+      </Routes>
+    </div>
+  );
+}
+
+function AppContainer() {
   return (
     <Provider store={store}>
       <Router>
-        <div className="container-fluid">
-          <Header />
-          <Routes>
-            <Route path="/" element={<HomePage />} />
-            <Route path="/mainlist" element={<MainListPage />} />
-            <Route path="/servicelist" element={<ServiceListPage />} />
-            <Route path="/reduxlist" element={<ReduxListPage />} />
-            <Route path="/about" element={<AboutPage />} />
-            <Route path="*" element={<PageNotFound />} />
-          </Routes>
-        </div>
+        <App />
       </Router>
     </Provider>
-  );
+  )
 }
-export default App;
+
+export default AppContainer

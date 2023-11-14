@@ -73,12 +73,16 @@ function MainListPage() {
 
   useEffect(() => {
     console.log('DidMount from effect hook')
+    let isActive = true
     getDataProvider()
       .getMainListData()
       .then(loadedElements => {
-        dispatch(createInitElements(loadedElements))
+        if (isActive) {
+          dispatch(createInitElements(loadedElements))
+        }
       })
     return () => {
+      isActive = false
       console.log('cleanup code')
     }
   }, []) // No dependencies - exec useEffect only once!
