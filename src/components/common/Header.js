@@ -17,6 +17,10 @@ function Header() {
         Service List
       </NavLink>
       {" | "}
+      <NavLink to="/reduxlist" style={({ isActive }) => isActive ? activeStyle : undefined}>
+        Redux List
+      </NavLink>
+      {" | "}
       <NavLink to="/about" style={({ isActive }) => isActive ? activeStyle : undefined}>
         About
       </NavLink>
