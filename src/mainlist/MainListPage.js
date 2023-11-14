@@ -3,57 +3,57 @@ import getDataProvider from '../DataProvider';
 import PropTypes from 'prop-types';
 
 const ACTIONS = {
-  INIT_ELEMENTS : 'MAINLIST/INIT_ELEMENTS',
-  SAVE_ELEMENT : 'MAINLIST/SAVE_ELEMENT',
-  SET_FILTER : 'MAINLIST/SET_FILTER',
-  DELETE_ELEMENT : 'MAINLIST/DELETE_ELEMENT'
+  INIT_ELEMENTS: 'MAINLIST/INIT_ELEMENTS',
+  SAVE_ELEMENT: 'MAINLIST/SAVE_ELEMENT',
+  SET_FILTER: 'MAINLIST/SET_FILTER',
+  DELETE_ELEMENT: 'MAINLIST/DELETE_ELEMENT'
 }
 
-const createInitElements = payload => { return {type:ACTIONS.INIT_ELEMENTS, payload}}
-const createSaveElement = payload => { return {type:ACTIONS.SAVE_ELEMENT, payload}}
-const createSetFilter = payload => { return {type:ACTIONS.SET_FILTER, payload}}
-const createDeleteElement = payload => { return {type:ACTIONS.DELETE_ELEMENT, payload}}
+const createInitElements = payload => { return { type: ACTIONS.INIT_ELEMENTS, payload } }
+const createSaveElement = payload => { return { type: ACTIONS.SAVE_ELEMENT, payload } }
+const createSetFilter = payload => { return { type: ACTIONS.SET_FILTER, payload } }
+const createDeleteElement = payload => { return { type: ACTIONS.DELETE_ELEMENT, payload } }
 
-const mainListReducer = (state,action) => {
-  switch(action.type) {
+const mainListReducer = (state, action) => {
+  switch (action.type) {
     case ACTIONS.INIT_ELEMENTS:
       let loadedElements = action.payload
       return {
-          originalElements:[...loadedElements],
-          elements:[...loadedElements]
+        originalElements: [...loadedElements],
+        elements: [...loadedElements]
       }
 
     case ACTIONS.SAVE_ELEMENT:
-      let element=action.payload
+      let element = action.payload
       let newOriginalElements = [
-        ...state.originalElements.filter(el=>el.position!==element.position),
+        ...state.originalElements.filter(el => el.position !== element.position),
         element
-      ] 
+      ]
       return {
-        originalElements:newOriginalElements,
-        elements:newOriginalElements
+        originalElements: newOriginalElements,
+        elements: newOriginalElements
       }
 
     case ACTIONS.SET_FILTER:
-      let filterValue=action.payload
-      let filteredElements = 
-        filterValue?
-        state.originalElements.filter(
-          element => element.name.toLowerCase().includes(filterValue.toLowerCase())
-        ):state.originalElements
+      let filterValue = action.payload
+      let filteredElements =
+        filterValue ?
+          state.originalElements.filter(
+            element => element.name.toLowerCase().includes(filterValue.toLowerCase())
+          ) : state.originalElements
       return {
         ...state,
-        elements:filteredElements
+        elements: filteredElements
       }
 
     case ACTIONS.DELETE_ELEMENT:
       let position = action.payload
       let lessOriginalElements = [
-        ...state.originalElements.filter(el=>el.position!==position)
-      ] 
+        ...state.originalElements.filter(el => el.position !== position)
+      ]
       return {
-        originalElements:lessOriginalElements,
-        elements:lessOriginalElements
+        originalElements: lessOriginalElements,
+        elements: lessOriginalElements
       }
 
     default:
@@ -65,23 +65,23 @@ const mainListReducer = (state,action) => {
 const DispatchContext = React.createContext(null)
 
 function MainListPage() {
-  
-  let [state,dispatch] = useReducer(mainListReducer,{
-    originalElements:[],
-    elements:[]
+
+  let [state, dispatch] = useReducer(mainListReducer, {
+    originalElements: [],
+    elements: []
   })
 
-  useEffect(()=>{
+  useEffect(() => {
     console.log('DidMount from effect hook')
     getDataProvider()
       .getMainListData()
       .then(loadedElements => {
         dispatch(createInitElements(loadedElements))
       })
-      return () => {
-        console.log('cleanup code')
-      }
-  },[]) // No dependencies - exec useEffect only once!
+    return () => {
+      console.log('cleanup code')
+    }
+  }, []) // No dependencies - exec useEffect only once!
 
   return (
     <DispatchContext.Provider value={dispatch}>
@@ -93,28 +93,28 @@ function MainListPage() {
 export default MainListPage;
 
 function useSelectedElement(elements) {
-  let [selectedElement,setSelectedElement] = useState(null)
+  let [selectedElement, setSelectedElement] = useState(null)
 
   let selectElement = useCallback(position => {
-    let element = elements.find(el=> el.position === position)
-    if(element) {
+    let element = elements.find(el => el.position === position)
+    if (element) {
       setSelectedElement(element)
     }
-  },[elements])
+  }, [elements])
 
   return [selectedElement, selectElement]
 }
 
-function MainListPagePresentation({elements}) {
-  let [selectedElement,selectElement] = useSelectedElement(elements)
+function MainListPagePresentation({ elements }) {
+  let [selectedElement, selectElement] = useSelectedElement(elements)
 
-  let body = useMemo(()=>{
-    return <Body elements={elements} selectElement={selectElement}/>
-  },[elements,selectElement])
+  let body = useMemo(() => {
+    return <Body elements={elements} selectElement={selectElement} />
+  }, [elements, selectElement])
 
-  let edit = useMemo(()=>{
-    return <MainListEdit {...{ selectedElement}}/>
-  },[selectedElement])
+  let edit = useMemo(() => {
+    return <MainListEdit {...{ selectedElement }} />
+  }, [selectedElement])
 
   return (
     <div>
@@ -145,11 +145,11 @@ function Filter() {
   // USE CONTEXT AND DISPATCH SAVE_ELEMENT ACTION
   let dispatch = useContext(DispatchContext)
 
-  const internalChangeFilter=(e) => {
+  const internalChangeFilter = (e) => {
     setFilterValue(e.target.value)
     dispatch(createSetFilter(e.target.value))
   }
-  
+
   return (
     <div>
       <label htmlFor="filter">Filter:&nbsp;</label>
@@ -158,25 +158,25 @@ function Filter() {
   )
 }
 
-function MainListEdit({selectedElement}) {
+function MainListEdit({ selectedElement }) {
   let defaultValues = {
     position: '',
     name: '',
     weight: '',
     symbol: ''
   }
-  let [editValues,changeValues] = useState(defaultValues);
+  let [editValues, changeValues] = useState(defaultValues);
 
-  useEffect(()=>{
-    if(selectedElement) {
-      changeValues(selectedElement) 
+  useEffect(() => {
+    if (selectedElement) {
+      changeValues(selectedElement)
     }
-  },[selectedElement])
+  }, [selectedElement])
 
-  let onChangedSimpleInput = (inputId,value) => {
+  let onChangedSimpleInput = (inputId, value) => {
     changeValues({
       ...editValues,
-      [inputId]:value
+      [inputId]: value
     })
   }
 
@@ -184,40 +184,40 @@ function MainListEdit({selectedElement}) {
   let dispatch = useContext(DispatchContext)
 
   let onSave = (e) => dispatch(createSaveElement(editValues))
-  
-  return(
+
+  return (
     <table>
       <tbody>
         <tr>
           <td>
-            <SimpleInput inputId='position' 
-              size='3' 
-              name='Pos' 
-              defaultValue={editValues.position} 
+            <SimpleInput inputId='position'
+              size='3'
+              name='Pos'
+              defaultValue={editValues.position}
               onChanged={onChangedSimpleInput}
             />
           </td>
           <td>
-            <SimpleInput inputId='name' 
-              size='15' 
-              name='Name' 
-              defaultValue={editValues.name} 
+            <SimpleInput inputId='name'
+              size='15'
+              name='Name'
+              defaultValue={editValues.name}
               onChanged={onChangedSimpleInput}
             />
           </td>
           <td>
-            <SimpleInput inputId='weight' 
-              size='6' 
-              name='Weight' 
-              defaultValue={editValues.weight} 
+            <SimpleInput inputId='weight'
+              size='6'
+              name='Weight'
+              defaultValue={editValues.weight}
               onChanged={onChangedSimpleInput}
             />
           </td>
           <td>
-            <SimpleInput inputId='symbol' 
-              size='3' 
-              name='Symbol' 
-              defaultValue={editValues.symbol} 
+            <SimpleInput inputId='symbol'
+              size='3'
+              name='Symbol'
+              defaultValue={editValues.symbol}
               onChanged={onChangedSimpleInput}
             />
           </td>
@@ -231,13 +231,13 @@ function MainListEdit({selectedElement}) {
   )
 }
 
-function SimpleInput({inputId,size, name, defaultValue,onChanged}) {
-  let [value,setValue]=useState(defaultValue)
+function SimpleInput({ inputId, size, name, defaultValue, onChanged }) {
+  let [value, setValue] = useState(defaultValue)
 
-  useEffect(()=>setValue(defaultValue),[defaultValue])
+  useEffect(() => setValue(defaultValue), [defaultValue])
 
   let onChangeInput = e => setValue(e.target.value)
-  let onBlurInput = e => onChanged(inputId,value)
+  let onBlurInput = e => onChanged(inputId, value)
   return (
     <>
       <label htmlFor={inputId}>{name}:&nbsp;</label>
@@ -250,15 +250,15 @@ function SimpleInput({inputId,size, name, defaultValue,onChanged}) {
   )
 }
 
-function Body({elements, selectElement}) {
+function Body({ elements, selectElement }) {
   return (
     elements.length > 0
-      ? elements.map(element=><Row key={element.position} {...{...element, selectElement}} />)
+      ? elements.map(element => <Row key={element.position} {...{ ...element, selectElement }} />)
       : <LoadTime colSpan={5} /*render={ msg => <h1>{msg}</h1> }*/ />
   )
 }
 
-function LoadTime({colSpan, render}) {
+function LoadTime({ colSpan, render }) {
   let msg = "Please wait while loading"
   let view = render ? render(msg) : <p>{msg}</p>
   return (
@@ -267,13 +267,13 @@ function LoadTime({colSpan, render}) {
 }
 
 LoadTime.propTypes = {
-  colSpan:PropTypes.number.isRequired,
-  render:PropTypes.func
+  colSpan: PropTypes.number.isRequired,
+  render: PropTypes.func
 }
 
-function Row({position,name,weight,symbol,selectElement}) {
+function Row({ position, name, weight, symbol, selectElement }) {
   let dispatch = useContext(DispatchContext)
-  
+
   return (
     <tr>
       <td>{position}</td>
@@ -281,8 +281,8 @@ function Row({position,name,weight,symbol,selectElement}) {
       <td>{weight}</td>
       <td>{symbol}</td>
       <td>
-        <button onClick={(e)=>selectElement(position)}>Select</button>
-        <button onClick={(e)=>dispatch(createDeleteElement(position))}>Delete</button>
+        <button onClick={(e) => selectElement(position)}>Select</button>
+        <button onClick={(e) => dispatch(createDeleteElement(position))}>Delete</button>
       </td>
     </tr>
   )
