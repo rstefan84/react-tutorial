@@ -56,7 +56,7 @@
     {
       "id": 1,
       "position": 1,
-      "name": "Hydrogena",
+      "name": "Hydrogen",
       "weight": 1.0079,
       "symbol": "H"
     },
@@ -89,11 +89,11 @@
       "symbol": "C"
     },
     {
-      "id": 7,
-      "position": 7,
-      "name": "Nitrogen",
-      "weight": 14.0067,
-      "symbol": "N"
+      "position": "7",
+      "name": "aaa",
+      "weight": "12",
+      "symbol": "AA",
+      "id": "7"
     }
   ]
 }

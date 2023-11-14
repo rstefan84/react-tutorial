@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
-
-// ADD FOR REDUX - START
-import { connect } from 'react-redux'
+import { useSelector, useDispatch } from 'react-redux'
 import {
   createLoadData,
   createSaveStart,
@@ -18,31 +16,16 @@ import {
 } from '../redux/reduxListActions'
 
 // ReduxListPage
-const mapStateToProps_ReduxListPage = state => {
-  let loadingError = selectLoadingError(state)
-  let savingError = selectSavingError(state)
-  let deleteError = selectDeleteError(state)
-  return {
-    loadingError,
-    savingError,
-    deleteError
-  }
-}
+function ReduxListPage() {
 
-const mapDispatchToProps_ReduxListPage = {
-  loadData: createLoadData
-}
-
-const ReduxListPage = connect(
-  mapStateToProps_ReduxListPage,
-  mapDispatchToProps_ReduxListPage
-)(_ReduxListPage)
-
-function _ReduxListPage({ loadData, loadingError, savingError, deleteError }) {
+  let loadingError = useSelector(selectLoadingError)
+  let savingError = useSelector(selectSavingError)
+  let deleteError = useSelector(selectDeleteError)
+  let dispatch = useDispatch()
 
   useEffect(() => {
-    loadData()
-  }, [loadData])
+    dispatch(createLoadData())
+  }, [dispatch])
 
   let error_msg = ''
   if (loadingError) {
@@ -92,26 +75,13 @@ function ReduxListPagePresentation() {
   )
 }
 
-const mapStateToProps_Filter = state => {
-  return {
-  }
-}
-
-const mapDispatchToProps_Filter = {
-  setFilter: createSetFilter
-}
-
-const Filter = connect(
-  mapStateToProps_Filter,
-  mapDispatchToProps_Filter
-)(_Filter)
-
-function _Filter({ setFilter }) {
+function Filter() {
   let [filterValue, setFilterValue] = useState('')
+  let dispatch = useDispatch()
 
   const internalChangeFilter = (e) => {
     setFilterValue(e.target.value)
-    setFilter(e.target.value)
+    dispatch(createSetFilter(e.target.value))
   }
 
   return (
@@ -122,23 +92,10 @@ function _Filter({ setFilter }) {
   )
 }
 
-const mapStateToProps_MainListEdit = state => {
-  let selectedElement = selectSelected(state)
-  return {
-    selectedElement
-  }
-}
+function MainListEdit() {
+  let selectedElement = useSelector(selectSelected)
+  let dispatch = useDispatch()
 
-const mapDispatchToProps_MainListEdit = {
-  saveElement: createSaveStart
-}
-
-const MainListEdit = connect(
-  mapStateToProps_MainListEdit,
-  mapDispatchToProps_MainListEdit
-)(_MainListEdit)
-
-function _MainListEdit({ selectedElement, saveElement }) {
   let defaultValues = {
     position: '',
     name: '',
@@ -160,7 +117,7 @@ function _MainListEdit({ selectedElement, saveElement }) {
     })
   }
 
-  let onSave = (e) => saveElement(editValues)
+  let onSave = (e) => dispatch(createSaveStart(editValues))
 
   return (
     <table>
@@ -227,24 +184,10 @@ function SimpleInput({ inputId, size, name, defaultValue, onChanged }) {
   )
 }
 
-const mapStateToProps_Body = state => {
-  let elements = selectElements(state)
-  let loadingError = selectLoadingError(state)
-  return {
-    elements,
-    loadingError
-  }
-}
+function Body() {
+  let elements = useSelector(selectElements)
+  let loadingError = useSelector(selectLoadingError)
 
-const mapDispatchToProps_Body = {
-}
-
-const Body = connect(
-  mapStateToProps_Body,
-  mapDispatchToProps_Body
-)(_Body)
-
-function _Body({ elements, loadingError }) {
   let load_info = loadingError ?
     <LoadTime colSpan={5} render={msg => <h1>{loadingError}</h1>} /> :
     <LoadTime colSpan={5} />
@@ -270,22 +213,9 @@ LoadTime.propTypes = {
   render: PropTypes.func
 }
 
-const mapStateToProps_Row = state => {
-  return {
-  }
-}
+function Row({ position, name, weight, symbol }) {
+  let dispatch = useDispatch()
 
-const mapDispatchToProps_Row = {
-  selectElement: createSelectElement,
-  deleteElement: createDeleteStart
-}
-
-const Row = connect(
-  mapStateToProps_Row,
-  mapDispatchToProps_Row
-)(_Row)
-
-function _Row({ position, name, weight, symbol, selectElement, deleteElement }) {
   return (
     <tr>
       <td>{position}</td>
@@ -293,8 +223,8 @@ function _Row({ position, name, weight, symbol, selectElement, deleteElement }) 
       <td>{weight}</td>
       <td>{symbol}</td>
       <td>
-        <button onClick={(e) => selectElement(position)}>Select</button>
-        <button onClick={(e) => deleteElement(position)}>Delete</button>
+        <button onClick={(e) => dispatch(createSelectElement(position))}>Select</button>
+        <button onClick={(e) => dispatch(createDeleteStart(position))}>Delete</button>
       </td>
     </tr>
   )
