@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { Suspense } from 'react';
 import Header from './components/common/Header';
 import HomePage from './components/HomePage';
 import AboutPage from './components/AboutPage';
@@ -13,6 +13,8 @@ import { Provider } from 'react-redux'
 import reducer from './redux'
 
 import thunk from 'redux-thunk'
+//import LongListPage from './mainlist/LongList';
+const LongListPage = React.lazy(() => import('./mainlist/LongList'));
 
 const store = configureStore({
   reducer,
@@ -24,14 +26,21 @@ export function App() {
   return (
     <div className="container-fluid">
       <Header />
-      <Routes>
-        <Route path="/" element={<HomePage />} />
-        <Route path="/mainlist" element={<MainListPage />} />
-        <Route path="/servicelist" element={<ServiceListPage />} />
-        <Route path="/reduxlist" element={<ReduxListPage />} />
-        <Route path="/about" element={<AboutPage />} />
-        <Route path="*" element={<PageNotFound />} />
-      </Routes>
+      <Suspense fallback={<div>Loading...</div>}>
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/mainlist" element={<MainListPage />} />
+          <Route path="/servicelist" element={<ServiceListPage />} />
+          <Route path="/reduxlist" element={<ReduxListPage />} />
+          <Route path="/longlist" element={
+            <Suspense fallback={<div>Loading...</div>}>
+              <LongListPage />
+            </Suspense>
+          } />
+          <Route path="/about" element={<AboutPage />} />
+          <Route path="*" element={<PageNotFound />} />
+        </Routes>
+      </Suspense>
     </div>
   );
 }

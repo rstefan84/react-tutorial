@@ -21,6 +21,10 @@ function Header() {
         Redux List
       </NavLink>
       {" | "}
+      <NavLink to="/longlist" style={({ isActive }) => isActive ? activeStyle : undefined}>
+        Long List
+      </NavLink>
+      {" | "}
       <NavLink to="/about" style={({ isActive }) => isActive ? activeStyle : undefined}>
         About
       </NavLink>
